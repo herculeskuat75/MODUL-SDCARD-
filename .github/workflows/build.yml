@@ -1,0 +1,46 @@
+name: Build Universal SD Module
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Build Environment
+      run: |
+        echo "Menyiapkan direktori kerja..."
+        mkdir -p output_module
+
+    - name: Auto-extract and Compile Module
+      run: |
+        echo "Memeriksa isi direktori..."
+        ls -la
+        
+        # Jika ada file zip di root, ekstrak otomatis
+        if ls *.zip 1> /dev/null 2>&1; then
+          echo "Menemukan file ZIP, mulai mengekstrak..."
+          unzip -o *.zip -d extracted_files/
+        else
+          echo "Tidak ada file ZIP, menggunakan file mentah yang ada."
+        fi
+
+    - name: Build Magisk ZIP
+      run: |
+        # Proses pemaketan kembali menjadi zip siap flash Magisk
+        cd module
+        zip -r9 ../output_module/exfat-sd-magisk-release.zip .
+        cd ..
+        echo "Build selesai!"
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Magisk-Universal-SD-Module
+        path: output_module/*.zip
